@@ -1,0 +1,21 @@
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# App build output
+app/dist/
+app/node_modules/
+
+# DB file (local data, not source code)
+app/server/db.json
+
+# Claude Code IDE settings (local only)
+.claude/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+/tmp/
