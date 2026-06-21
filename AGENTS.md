@@ -1,53 +1,44 @@
-## Strategic context, about me
+# Agents
 
-Google Docs is a browser-based collaborative document editor, autosaved to Drive and shared by link. We serve knowledge workers in SMBs and enterprises on Google Workspace, education users, and individuals on free Google accounts. The value proposition: frictionless real-time collaboration with zero install, deep Workspace integration, and built-in AI assistance.
+## Job Search Agent
 
-See [docs/strategy.md](docs/strategy.md) for the full version.
+The primary agent for this project is defined in [`docs/job-search-agent.md`](docs/job-search-agent.md).
 
-## Communication and style
+It acts as an elite AI recruiting assistant and performs the following workflow when invoked:
 
-- Short and direct rather than lengthy explanations.
-- When you notice a recurring friction, a missing workflow, or a better way to organize how we work — say so. Don't wait to be asked.
-- No hedging language: "I think maybe" → state it or don't.
-- Default to acting. Ask when a question is cheap and useful — before big token spends, irreversible moves, or non-obvious choices between approaches. A short question beats the wrong direction.
+1. **Profile Extraction** — parses the user's resume into structured data (skills, experience, education, seniority, ATS keywords, target roles)
+2. **Job Search** — searches 20+ live job boards for postings from the last 48 hours (LinkedIn, Indeed, Naukri, Wellfound, Greenhouse, Lever, YC, Remotive, Remote OK, and more)
+3. **Match Scoring** — scores every role out of 100 across 7 weighted factors (skill overlap, experience level, ATS keywords, industry fit, preferred JD requirements, education, location)
+4. **Structured Output** — returns a results table, top 10 picks, ATS keyword analysis, resume improvement tips, skill gap analysis, and application strategy
 
-<!-- Add more style notes here as patterns emerge. -->
+### How to invoke
 
-## Quality
+From the app: upload your resume on the **Resume** page and click **Find Jobs**.
 
-- **Never trade quality for tokens.** Don't delegate judgment-heavy work to cheaper models. Don't cut corners to save context.
-- **Finish the work.** No half-done implementations, no placeholders left dangling, no "I'll come back to it." If a step is in scope, complete it.
-- **Fix, don't describe.** When the fix is within reach, do it. Don't write up a "here's what I found" report as a substitute for solving the problem. Reports are for things you can't solve or shouldn't solve without input.
+From Claude Code directly:
+```
+Use the job-search-agent from docs/job-search-agent.md.
+My resume is in docs/resume.md.
+Find me jobs posted in the last 48 hours.
+```
 
-## Subagents
+### Match Score Thresholds
 
-Spawn subagents to isolate context, parallelize independent work, or offload bulk mechanical tasks. Don't spawn when the parent needs the reasoning, when synthesis requires holding things together, or when spawn overhead dominates.
+| Score | Action |
+|---|---|
+| 95–100 | Perfect fit. Apply immediately. |
+| 85–94 | Strong fit. Very high interview probability. |
+| 75–84 | Good fit. Apply with minor resume tweaks. |
+| 60–74 | Moderate fit. Only apply if company/comp is exceptional. |
+| < 60 | Not included. |
 
-Pick the cheapest model that can do the subtask well, for example:
-- **Haiku**: bulk mechanical work, no judgment
-- **Sonnet**: scoped research, code exploration, in-scope synthesis
-- **Opus**: subtasks needing real planning or tradeoffs
+---
 
-**Pack the strategic why, not just the task.** Tell the subagent what the parent is trying to decide, not only what to fetch. A subagent that knows "we're choosing between A and B" can flag a third option or surface that the question itself is wrong. A subagent told only "research A and B" can't. The fresh context cuts both ways: without the strategic frame, the child can't recognize a curveball, can't flag a pivot, can't separate signal from noise mid-research.
+## Project Context
 
-**The brief is the entire reality.** A subagent given a research task returns what it was asked to find — data, summaries, lists. It doesn't verify the underlying claims you'll build on unless you ask it to. If the synthesis depends on a specific claim being true (e.g. "none of them shipped feature X"), put that in the brief and ask the subagent to confirm or refute against primary sources (announcement pages, docs, changelogs). Treat absence claims as extraordinary — verify load-bearing claims before drafting, not after pushback. Surface artifacts ≠ underlying reality. Different question, different fetch.
+**PM Job Tracker** is an AI-powered job search and tracking tool for Product Managers.
 
-If a subagent realizes it needs a higher tier than itself, return to the parent.
-
-Parent owns final output and cross-spawn synthesis. User instructions override.
-
-## Preferred Tools
-
-### Data Fetching
-
-1. **WebFetch**: free, text-only, works on public pages that don't block bots.
-2. **agent-browser CLI**: free, local Rust CLI + Chrome via CDP. For dynamic pages or auth walls that WebFetch can't handle. Returns the accessibility tree with element refs (`@e1`, `@e2`). ~82% fewer tokens than screenshot-based tools. Install: `npm i -g agent-browser && agent-browser install`. Use `snapshot` for AI-friendly DOM state, element refs for interaction.
-3. **Notice recurring fetch patterns and propose wrapping them as dedicated tools.** When the same fetch/parse logic comes up more than once, suggest wrapping it as a named tool (e.g. a skill file or a `.py` script that calls `agent-browser` with the snapshot and extraction steps baked in for that source). Add the entry to `## Dedicated Tools` below and reference it by name on future calls.
-
-### PDF Files
-
-Use `pdftotext`, not the `Read` tool. Use `Read` only when the user directly asks to analyze images or charts inside the document (`Read` loads PDFs as images).
-
-## Dedicated Tools
-
-- **reddit_api_example** — Reddit API utility for fetching top/hot posts from subreddits, or a single post by URL/ID
+- Resume upload (PDF/DOCX) → AI job search → Kanban board tracking → Stats dashboard
+- Built with React + Vite (frontend), Express + Anthropic SDK (backend)
+- All data stored locally in `app/server/db.json`
+- See [README.md](README.md) for full setup instructions
